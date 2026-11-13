@@ -8,21 +8,29 @@ from __future__ import annotations
 
 import copy
 from dataclasses import replace
+from pathlib import Path
 
-from PySide6.QtCore import QMimeData, QRegularExpression, Qt, Signal
+from PySide6.QtCore import QMimeData, QPoint, QRectF, QRegularExpression, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QBrush,
+    QDragEnterEvent,
+    QDragMoveEvent,
+    QDropEvent,
     QColor,
     QFontDatabase,
     QGuiApplication,
     QKeyEvent,
     QKeySequence,
     QMouseEvent,
+    QPaintEvent,
+    QPainter,
+    QPen,
+    QTextFrameFormat,
     QTextCharFormat,
     QTextCursor,
     QTextDocument,
 )
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QApplication, QWidget
 
 from core import bidi
 from core.document import (
@@ -35,7 +43,7 @@ from core.document import (
     ParagraphStyle,
 )
 from core.styles import ensure_styles
-from editor.objects import OBJECT_CHAR, PROP_DATA, ObjectHandler, handler_for, object_from_format, without_object
+from editor.objects import IMAGE_SUFFIXES, OBJECT_CHAR, PROP_DATA, ObjectHandler, handler_for, object_at, object_from_format, without_object
 from core.persian import ZWNJ, to_latin_digits, to_persian_digits
 from core.typography import (
     LATIN_FONT_FALLBACKS,
@@ -61,12 +69,17 @@ class RichTextEditor(FeatureMixin, PageTextEdit):
     objectActivated = Signal(int, dict)  # position, object description
     marginActivated = Signal()  # double click in the header/footer area
     formatPainted = Signal()
+    imageDropFailed = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._info = Document(blocks=[])
         self.setAcceptRichText(True)
         self.setTabChangesFocus(False)
+        self._object_drag = None
+        self._drag_scroll_timer = QTimer(self)
+        self._drag_scroll_timer.setInterval(45)
+        self._drag_scroll_timer.timeout.connect(self._scroll_during_object_drag)
         self.load_document(Document())
         self.cursorPositionChanged.connect(self._drop_object_typing_format)
 
@@ -402,8 +415,67 @@ class RichTextEditor(FeatureMixin, PageTextEdit):
             self.textCursor().insertText(source.text())
         self.ensureCursorVisible()
 
+    @staticmethod
+    def _image_file_paths(source: QMimeData) -> list[Path]:
+        """Accept local image-file drops only; never fetch remote URLs."""
+        urls = source.urls()
+        if not urls or not all(url.isLocalFile() for url in urls):
+            return []
+        paths = [Path(url.toLocalFile()) for url in urls]
+        return paths if all(path.suffix.lower().lstrip(".") in IMAGE_SUFFIXES for path in paths) else []
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:  # noqa: N802
+        if self._image_file_paths(event.mimeData()):
+            if self.isReadOnly():
+                event.ignore()
+            else:
+                event.setDropAction(Qt.DropAction.CopyAction)
+                event.accept()
+            return
+        super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:  # noqa: N802
+        if self._image_file_paths(event.mimeData()):
+            if not self.isReadOnly() and self._valid_drop_point(event.position().toPoint()):
+                event.setDropAction(Qt.DropAction.CopyAction)
+                event.accept()
+            else:
+                event.ignore()
+            return
+        super().dragMoveEvent(event)
+
+    def dropEvent(self, event: QDropEvent) -> None:  # noqa: N802
+        paths = self._image_file_paths(event.mimeData())
+        if paths:
+            if self.isReadOnly():
+                event.ignore()
+                return
+            point = event.position().toPoint()
+            if not self._valid_drop_point(point):
+                event.ignore()
+                return
+            cursor = self.cursorForPosition(point)
+            cursor.clearSelection()
+            cursor.beginEditBlock()
+            self.setTextCursor(cursor)
+            failed = []
+            for path in paths:
+                if self.insert_image_file(path) is None:
+                    failed.append(path.name)
+            cursor.endEditBlock()
+            if failed:
+                self.imageDropFailed.emit("، ".join(failed))
+            event.setDropAction(Qt.DropAction.CopyAction)
+            event.accept()
+            return
+        super().dropEvent(event)
+
     # --------------------------------------------------------------- events
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Escape and self._object_drag is not None:
+            self._cancel_object_drag()
+            event.accept()
+            return
         if event.matches(QKeySequence.StandardKey.Copy):
             self.copy()
             return
@@ -447,8 +519,160 @@ class RichTextEditor(FeatureMixin, PageTextEdit):
                     return position
         return -1
 
+    def _object_hit(self, point: QPoint) -> tuple[int, QRectF] | None:
+        """Hit-test the actual image/shape bounds, not just the nearest cursor."""
+        document = self.document()
+        layout = document.documentLayout()
+        dx = self._horizontal_offset()
+        dy = self.verticalScrollBar().value()
+
+        def floating(frame):  # noqa: ANN001, ANN202
+            for child in frame.childFrames():
+                result = floating(child)
+                if result is not None:
+                    return result
+                if child.frameFormat().position() not in (QTextFrameFormat.Position.FloatLeft,
+                                                          QTextFrameFormat.Position.FloatRight):
+                    continue
+                position = child.firstPosition() - 1
+                obj = object_at(document, position)
+                if obj is None or obj.get("type") not in ("image", "shape"):
+                    continue
+                rect = layout.frameBoundingRect(child).translated(-dx, -dy)
+                if rect.contains(point):
+                    return position, rect
+            return None
+
+        hit = floating(document.rootFrame())
+        if hit is not None:
+            return hit
+        cursor = self.cursorForPosition(point)
+        for position in (cursor.position(), cursor.position() - 1):
+            obj = object_at(document, position)
+            if obj is None or obj.get("type") not in ("image", "shape"):
+                continue
+            block = document.findBlock(position)
+            text_layout = block.layout()
+            if text_layout is None:
+                continue
+            offset = position - block.position()
+            line = text_layout.lineForTextPosition(offset)
+            if not line.isValid():
+                continue
+            probe = QTextCursor(document)
+            probe.setPosition(position + 1)
+            size = self.objects.object_size(obj, document, probe.charFormat())
+            block_rect = layout.blockBoundingRect(block)
+            x1 = block_rect.x() + line.cursorToX(offset)[0] - dx
+            x2 = block_rect.x() + line.cursorToX(offset + 1)[0] - dx
+            top = block_rect.y() + line.y() + line.ascent() - size.height() - dy
+            rect = QRectF(min(x1, x2), top, abs(x2 - x1), size.height())
+            if rect.contains(point):
+                return position, rect
+        return None
+
+    def _cancel_object_drag(self) -> None:
+        self._drag_scroll_timer.stop()
+        self._object_drag = None
+        self.viewport().unsetCursor()
+        self.viewport().update()
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        if (event.button() == Qt.MouseButton.LeftButton and not self.isReadOnly()
+                and event.modifiers() == Qt.KeyboardModifier.NoModifier and not self.format_painter_active()):
+            hit = self._object_hit(event.position().toPoint())
+            selection = self.textCursor()
+            if (hit is not None and selection.hasSelection()
+                    and selection.selectionEnd() - selection.selectionStart() > 1
+                    and selection.selectionStart() <= hit[0] < selection.selectionEnd()):
+                super().mousePressEvent(event)
+                return
+            if hit is not None:
+                position, rect = hit
+                cursor = QTextCursor(self.document())
+                cursor.setPosition(position)
+                cursor.setPosition(position + 1, QTextCursor.MoveMode.KeepAnchor)
+                self.setTextCursor(cursor)
+                self._object_drag = {"position": position, "revision": self.document().revision(),
+                                     "start": event.position().toPoint(), "current": event.position().toPoint(),
+                                     "rect": rect, "active": False}
+                event.accept()
+                return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        drag = self._object_drag
+        if drag is not None and event.buttons() & Qt.MouseButton.LeftButton:
+            point = event.position().toPoint()
+            if (point - drag["start"]).manhattanLength() >= QApplication.startDragDistance():
+                drag["active"] = True
+                self.viewport().setCursor(Qt.CursorShape.ClosedHandCursor)
+            drag["current"] = point
+            if drag["active"] and self._near_drag_scroll_edge(point):
+                self._drag_scroll_timer.start()
+            else:
+                self._drag_scroll_timer.stop()
+            self.viewport().update()
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def _near_drag_scroll_edge(self, point: QPoint) -> bool:
+        rect = self.viewport().rect()
+        return (point.x() < 24 or point.x() > rect.width() - 24 or
+                point.y() < 24 or point.y() > rect.height() - 24)
+
+    def _scroll_during_object_drag(self) -> None:
+        drag = self._object_drag
+        if drag is None or not drag["active"]:
+            self._drag_scroll_timer.stop()
+            return
+        point = drag["current"]
+        rect = self.viewport().rect()
+        vertical = self.verticalScrollBar()
+        horizontal = self.horizontalScrollBar()
+        if point.y() < 24:
+            vertical.setValue(vertical.value() - 30)
+        elif point.y() > rect.height() - 24:
+            vertical.setValue(vertical.value() + 30)
+        horizontal_step = -30 if self.isRightToLeft() else 30
+        if point.x() < 24:
+            horizontal.setValue(horizontal.value() - horizontal_step)
+        elif point.x() > rect.width() - 24:
+            horizontal.setValue(horizontal.value() + horizontal_step)
+        self.viewport().update()
+
+    def _valid_drop_point(self, point: QPoint) -> bool:
+        geometry = self.page_geometry
+        x = point.x() + self._horizontal_offset()
+        return (self.viewport().rect().contains(point) and not self.in_page_margin(point.y())
+                and geometry.margin_left <= x <= geometry.width - geometry.margin_right)
+
+    def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802
+        super().paintEvent(event)
+        drag = self._object_drag
+        if drag is None or not drag["active"]:
+            return
+        point = drag["current"]
+        painter = QPainter(self.viewport())
+        pen = QPen(QColor("#2874d0") if self._valid_drop_point(point) else QColor("#c33e3e"), 2)
+        pen.setStyle(Qt.PenStyle.DashLine)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRect(drag["rect"].translated(point - drag["start"]))
+        if self._valid_drop_point(point):
+            caret = self.cursorRect(self.cursorForPosition(point))
+            painter.setPen(QPen(QColor("#2874d0"), 3))
+            painter.drawLine(caret.topLeft(), caret.bottomLeft())
+        painter.end()
+
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:  # noqa: N802
-        position = self._object_position_at(event)
+        self._cancel_object_drag()
+        hit = self._object_hit(event.position().toPoint())
+        position = hit[0] if hit is not None else self._object_position_at(event)
+        obj = object_at(self.document(), position)
+        if hit is None and obj is not None and obj.get("type") in ("image", "shape"):
+            position = -1  # nearest cursor may be outside the actual object
         if position >= 0:
             cursor = self.textCursor()
             cursor.setPosition(position)
@@ -464,6 +688,18 @@ class RichTextEditor(FeatureMixin, PageTextEdit):
         super().mouseDoubleClickEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802
+        drag = self._object_drag
+        if event.button() == Qt.MouseButton.LeftButton and drag is not None:
+            point = event.position().toPoint()
+            self._cancel_object_drag()
+            if (drag["active"] and self.document().revision() == drag["revision"]
+                    and self._valid_drop_point(point)):
+                geometry = self.page_geometry
+                fraction = (point.x() + self._horizontal_offset() - geometry.margin_left) / max(1, geometry.content_width)
+                placement = "left" if fraction < 1 / 3 else "right" if fraction > 2 / 3 else "center"
+                self.move_object(drag["position"], self.cursorForPosition(point), placement=placement)
+            event.accept()
+            return
         super().mouseReleaseEvent(event)
         if event.button() != Qt.MouseButton.LeftButton:
             return

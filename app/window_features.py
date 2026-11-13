@@ -120,6 +120,7 @@ class WindowFeatures:
 
     def _connect_feature_signals(self) -> None:
         self.editor.objectActivated.connect(self.edit_object)
+        self.editor.imageDropFailed.connect(lambda names: self._message(f"تصویر خوانده نشد: {names}", 8000))
         self.editor.marginActivated.connect(self.show_header_footer)
 
     def _message(self, text: str, timeout: int = 5000) -> None:
@@ -162,7 +163,7 @@ class WindowFeatures:
         if obj is None:
             self._show_error("این پرونده یک تصویر پشتیبانی‌شده نیست.", str(path))
             return False
-        self._message("برای تنظیم اندازه و جای تصویر، روی آن دوبار کلیک کنید یا «ویژگی‌های شیء» را بزنید.", 8000)
+        self._message("برای جابه‌جایی تصویر آن را بکشید؛ برای تنظیم اندازه و جای‌گیری دوبار کلیک کنید.", 8000)
         return True
 
     def open_drawing_studio(self) -> None:

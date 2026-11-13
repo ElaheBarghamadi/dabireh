@@ -36,6 +36,7 @@ from editor.objects import (
     OBJECT_CHAR,
     image_to_png_bytes,
     insert_object,
+    object_at,
     object_from_format,
     without_object,
 )
@@ -259,6 +260,53 @@ class FeatureMixin:
                 cursor.insertBlock(text_format, without_object(base))
         cursor.endEditBlock()
         self.setTextCursor(cursor)
+
+    def move_object(self, position: int, target: QTextCursor, *, placement: str | None = None) -> bool:
+        """Move an image or shape to a text anchor as one undoable edit.
+
+        Pictures in a separate paragraph or wrapped at the sides can also have
+        their horizontal placement changed. Existing paragraph text is never
+        discarded, and image resources and object formatting are retained.
+        """
+        document = self.document()
+        if self.isReadOnly() or target.document() != document or target.hasSelection():
+            return False
+        original = object_at(document, position)
+        if original is None or original.get("type") not in ("image", "shape"):
+            return False
+        obj = dict(original)
+        if placement in ("left", "center", "right"):
+            if ((obj.get("type") == "image" and obj.get("wrap") == "block") or
+                    (obj.get("type") == "shape" and obj.get("layout_canvas") is True)):
+                obj["block_alignment"] = placement
+            elif (obj.get("type") == "image" and obj.get("wrap") in ("square_left", "square_right")
+                  and placement in ("left", "right")):
+                obj["wrap"] = "square_left" if placement == "left" else "square_right"
+        same_anchor = target.position() in (position, position + 1)
+        if same_anchor and obj == original:
+            return False
+        if same_anchor:
+            self.replace_object(position, obj)
+            return True
+
+        source = QTextCursor(document)
+        source.setPosition(position)
+        source.setPosition(position + 1, QTextCursor.MoveMode.KeepAnchor)
+        base = without_object(source.charFormat())
+        destination = QTextCursor(target)  # Qt adjusts this cursor as the source is removed
+        source.beginEditBlock()
+        source.removeSelectedText()
+        insert_object(destination, obj, base)
+        inserted_at = destination.position() - 1
+        if ((obj.get("type") == "image" and obj.get("wrap") == "block") or
+                (obj.get("type") == "shape" and obj.get("layout_canvas") is True)):
+            self.replace_object(inserted_at, obj)
+        else:
+            self.setTextCursor(destination)
+            self.setCurrentCharFormat(base)
+        source.endEditBlock()
+        self.ensureCursorVisible()
+        return True
 
     def insert_layout_canvas(self, obj: dict[str, Any]) -> None:
         """Insert the canvas as a separate paragraph in a single undo step."""

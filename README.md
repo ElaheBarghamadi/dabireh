@@ -213,7 +213,13 @@ button to fit the image within the page margins. Choose «جدا از متن» a
 right, centre or left alignment to place the image in its own paragraph, with
 text above and below it. The surrounding text is preserved; typing continues
 in a paragraph below. Inline and floating left/right modes remain available.
-Images are anchored to the text rather than freely draggable around the page.
+Drag an image or shape in the editor to move its text anchor; a dashed outline
+and insertion marker show the destination. Hold near the viewport edge to scroll
+and press Esc to cancel. Separate-paragraph images can be dragged to the left,
+centre or right of the text area; wrapped images switch sides. Dropping local
+image files onto the editor inserts them at the drop position. Moving an image
+is undoable. Images remain anchored to the text: this is not unrestricted
+absolute positioning anywhere on the page.
 
 ## Appearance
 
