@@ -1,0 +1,1416 @@
+{
+ "format": "dabireh-document",
+ "version": 2,
+ "metadata": {
+  "title": "گزارش آزمایش فیزیک",
+  "author": "",
+  "subject": "",
+  "keywords": "",
+  "language": "fa",
+  "created": "2026-11-13T15:11:19+00:00",
+  "modified": "2026-11-13T15:11:20+00:00"
+ },
+ "page": {
+  "size": "A4",
+  "orientation": "portrait",
+  "margin_top": 25.0,
+  "margin_bottom": 25.0,
+  "margin_left": 25.0,
+  "margin_right": 25.0,
+  "background": "#ffffff",
+  "custom_width": 210.0,
+  "custom_height": 297.0,
+  "border_width": 0.0,
+  "border_color": "#000000"
+ },
+ "defaults": {
+  "font_family": "Vazirmatn",
+  "font_size": 13.0,
+  "latin_font": "Cambria",
+  "math_font": "Cambria Math",
+  "direction": "rtl"
+ },
+ "header_footer": {
+  "header": "{title}",
+  "footer": "صفحهٔ {page} از {pages}",
+  "first_header": "",
+  "first_footer": "",
+  "even_header": "",
+  "even_footer": "",
+  "different_first": false,
+  "different_odd_even": false,
+  "header_align": "center",
+  "footer_align": "center",
+  "number_format": "persian",
+  "font_size": 10.0
+ },
+ "styles": [
+  {
+   "name": "Normal",
+   "char": {},
+   "paragraph": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.15,
+    "space_before": 0.0,
+    "space_after": 6,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": ""
+   },
+   "heading_level": 0,
+   "builtin": true
+  },
+  {
+   "name": "Title",
+   "char": {
+    "font_size": 26,
+    "bold": true
+   },
+   "paragraph": {
+    "alignment": "center",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 0.0,
+    "space_after": 12,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Title"
+   },
+   "heading_level": 0,
+   "builtin": true
+  },
+  {
+   "name": "Subtitle",
+   "char": {
+    "font_size": 15,
+    "color": "#5b6472"
+   },
+   "paragraph": {
+    "alignment": "center",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 0.0,
+    "space_after": 14,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Subtitle"
+   },
+   "heading_level": 0,
+   "builtin": true
+  },
+  {
+   "name": "Heading 1",
+   "char": {
+    "font_size": 20,
+    "bold": true,
+    "color": "#1f5fbf"
+   },
+   "paragraph": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 16,
+    "space_after": 8,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Heading 1"
+   },
+   "heading_level": 1,
+   "builtin": true
+  },
+  {
+   "name": "Heading 2",
+   "char": {
+    "font_size": 16,
+    "bold": true,
+    "color": "#1f5fbf"
+   },
+   "paragraph": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 12,
+    "space_after": 6,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Heading 2"
+   },
+   "heading_level": 2,
+   "builtin": true
+  },
+  {
+   "name": "Heading 3",
+   "char": {
+    "font_size": 14,
+    "bold": true
+   },
+   "paragraph": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 10,
+    "space_after": 4,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Heading 3"
+   },
+   "heading_level": 3,
+   "builtin": true
+  },
+  {
+   "name": "Quote",
+   "char": {
+    "italic": true,
+    "color": "#4a5260"
+   },
+   "paragraph": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 6,
+    "space_after": 6,
+    "first_line_indent": 0.0,
+    "indent_left": 28,
+    "indent_right": 28,
+    "background": "#f3f5f8",
+    "page_break_before": false,
+    "style_name": "Quote"
+   },
+   "heading_level": 0,
+   "builtin": true
+  },
+  {
+   "name": "Caption",
+   "char": {
+    "font_size": 10.5,
+    "color": "#4a5260"
+   },
+   "paragraph": {
+    "alignment": "center",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 2,
+    "space_after": 10,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Caption"
+   },
+   "heading_level": 0,
+   "builtin": true
+  },
+  {
+   "name": "Code",
+   "char": {
+    "font_family": "Consolas",
+    "font_size": 10.5
+   },
+   "paragraph": {
+    "alignment": "start",
+    "direction": "ltr",
+    "line_spacing": 1.0,
+    "space_before": 0.0,
+    "space_after": 0.0,
+    "first_line_indent": 0.0,
+    "indent_left": 10,
+    "indent_right": 10,
+    "background": "#f3f5f8",
+    "page_break_before": false,
+    "style_name": "Code"
+   },
+   "heading_level": 0,
+   "builtin": true
+  }
+ ],
+ "blocks": [
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "center",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 0.0,
+    "space_after": 12.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Title"
+   },
+   "runs": [
+    {
+     "text": "گزارش آزمایش فیزیک",
+     "style": {
+      "font_size": 26.0,
+      "bold": true
+     }
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "center",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 0.0,
+    "space_after": 14.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Subtitle"
+   },
+   "runs": [
+    {
+     "text": "نمونهٔ امکانات دبیره — Dabireh feature sample",
+     "style": {
+      "font_size": 15.0,
+      "color": "#5b6472"
+     }
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 0.0,
+    "space_after": 6.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "TOC"
+   },
+   "runs": [
+    {
+     "text": "فهرست مطالب",
+     "style": {
+      "font_size": 16.25,
+      "bold": true
+     }
+    }
+   ]
+  },
+  {
+   "column_widths": [
+    88.0,
+    12.0
+   ],
+   "header_rows": 0,
+   "direction": "rtl",
+   "alignment": "center",
+   "width_percent": 100.0,
+   "border_width": 0.0,
+   "border_color": "#7a828e",
+   "cell_padding": 2.0,
+   "role": "toc",
+   "type": "table",
+   "rows": [
+    [
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "مقدمه",
+          "style": {
+           "bold": true
+          }
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "end",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۱"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     }
+    ],
+    [
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "اندازه‌گیری‌ها",
+          "style": {
+           "bold": true
+          }
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "end",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۱"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     }
+    ],
+    [
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "شکل‌ها و تصویر",
+          "style": {
+           "bold": true
+          }
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "end",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۱"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     }
+    ]
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 16.0,
+    "space_after": 8.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Heading 1"
+   },
+   "runs": [
+    {
+     "text": "مقدمه",
+     "style": {
+      "font_size": 20.0,
+      "bold": true,
+      "color": "#1f5fbf"
+     }
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.15,
+    "space_before": 0.0,
+    "space_after": 6.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": ""
+   },
+   "runs": [
+    {
+     "text": "در این آزمایش رابطهٔ انرژی و جرم بررسی می‌شود. رابطهٔ مشهور "
+    },
+    {
+     "text": "",
+     "object": {
+      "display": false,
+      "latex": "E = mc^2",
+      "numbered": false,
+      "type": "equation"
+     }
+    },
+    {
+     "text": " را Einstein در سال ۱۹۰۵ ارائه کرد"
+    },
+    {
+     "text": "",
+     "object": {
+      "text": "Albert Einstein، مقالهٔ سال ۱۹۰۵ در Annalen der Physik.",
+      "type": "note"
+     }
+    },
+    {
+     "text": ". ریشه‌های معادلهٔ درجهٔ دوم نیز چنین‌اند:"
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "center",
+    "direction": "auto",
+    "line_spacing": 1.15,
+    "space_before": 0.0,
+    "space_after": 6.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": ""
+   },
+   "runs": [
+    {
+     "text": "",
+     "object": {
+      "display": true,
+      "latex": "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}",
+      "numbered": true,
+      "type": "equation"
+     }
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 16.0,
+    "space_after": 8.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Heading 1"
+   },
+   "runs": [
+    {
+     "text": "اندازه‌گیری‌ها",
+     "style": {
+      "font_size": 20.0,
+      "bold": true,
+      "color": "#1f5fbf"
+     }
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.15,
+    "space_before": 0.0,
+    "space_after": 6.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": ""
+   },
+   "runs": [
+    {
+     "text": "نتیجهٔ سه بار اندازه‌گیری در جدول زیر آمده است."
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.15,
+    "space_before": 0.0,
+    "space_after": 6.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": ""
+   },
+   "runs": []
+  },
+  {
+   "column_widths": [
+    25.0,
+    25.0,
+    25.0,
+    25.0
+   ],
+   "header_rows": 1,
+   "direction": "rtl",
+   "alignment": "center",
+   "width_percent": 100.0,
+   "border_width": 1.0,
+   "border_color": "#7a828e",
+   "cell_padding": 5.0,
+   "role": "",
+   "type": "table",
+   "rows": [
+    [
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "ردیف",
+          "style": {
+           "bold": true
+          }
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": "#e3ecfa",
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "جرم (kg)",
+          "style": {
+           "bold": true
+          }
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": "#e3ecfa",
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "سرعت (m/s)",
+          "style": {
+           "bold": true
+          }
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": "#e3ecfa",
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "انرژی (J)",
+          "style": {
+           "bold": true
+          }
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": "#e3ecfa",
+      "vertical_align": "top"
+     }
+    ],
+    [
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۱"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۲٫۰"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۳٫۰"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۹٫۰"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     }
+    ],
+    [
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۲"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۴٫۰"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۵٫۰"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۵۰٫۰"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     }
+    ],
+    [
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۳"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۶٫۰"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۷٫۰"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     },
+     {
+      "blocks": [
+       {
+        "type": "paragraph",
+        "style": {
+         "alignment": "start",
+         "direction": "auto",
+         "line_spacing": 1.0,
+         "space_before": 0.0,
+         "space_after": 0.0,
+         "first_line_indent": 0.0,
+         "indent_left": 0.0,
+         "indent_right": 0.0,
+         "background": null,
+         "page_break_before": false,
+         "style_name": ""
+        },
+        "runs": [
+         {
+          "text": "۱۴۷٫۰"
+         }
+        ]
+       }
+      ],
+      "row_span": 1,
+      "col_span": 1,
+      "background": null,
+      "vertical_align": "top"
+     }
+    ]
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "center",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 2.0,
+    "space_after": 10.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Caption"
+   },
+   "runs": [
+    {
+     "text": "جدول ۱: نتیجهٔ اندازه‌گیری‌ها",
+     "style": {
+      "font_size": 10.5,
+      "color": "#4a5260"
+     }
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 16.0,
+    "space_after": 8.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Heading 1"
+   },
+   "runs": [
+    {
+     "text": "شکل‌ها و تصویر",
+     "style": {
+      "font_size": 20.0,
+      "bold": true,
+      "color": "#1f5fbf"
+     }
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.15,
+    "space_before": 0.0,
+    "space_after": 6.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": ""
+   },
+   "runs": [
+    {
+     "text": "",
+     "object": {
+      "border_color": "#1f5fbf",
+      "border_width": 1,
+      "crop": [
+       0,
+       0,
+       0,
+       0
+      ],
+      "height": 122,
+      "resource": "3e3e1f093c610367.png",
+      "rotation": 0,
+      "type": "image",
+      "width": 200,
+      "wrap": "square_left"
+     }
+    },
+    {
+     "text": "تصویر در سمت چپ شناور است و متن فارسی از کنار آن می‌گذرد. شکل‌های برداری نیز درون متن می‌نشینند و با دوبار کلیک ویرایش می‌شوند: "
+    },
+    {
+     "text": "",
+     "object": {
+      "fill": "#dfe9fb",
+      "height": 44,
+      "kind": "rounded",
+      "opacity": 1.0,
+      "rotation": 0,
+      "sides": 5,
+      "stroke": "#1f5fbf",
+      "stroke_width": 1.5,
+      "text": "آغاز",
+      "type": "shape",
+      "width": 90
+     }
+    },
+    {
+     "text": " "
+    },
+    {
+     "text": "",
+     "object": {
+      "fill": null,
+      "height": 20,
+      "kind": "arrow",
+      "opacity": 1.0,
+      "rotation": 0,
+      "sides": 5,
+      "stroke": "#444444",
+      "stroke_width": 1.5,
+      "text": "",
+      "type": "shape",
+      "width": 60
+     }
+    },
+    {
+     "text": " "
+    },
+    {
+     "text": "",
+     "object": {
+      "fill": "#fdebc8",
+      "height": 44,
+      "kind": "ellipse",
+      "opacity": 1.0,
+      "rotation": 0,
+      "sides": 5,
+      "stroke": "#b9770e",
+      "stroke_width": 1.5,
+      "text": "پایان",
+      "type": "shape",
+      "width": 90
+     }
+    },
+    {
+     "text": " "
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "center",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 2.0,
+    "space_after": 10.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Caption"
+   },
+   "runs": [
+    {
+     "text": "شکل ۱: تصویر شناور و شکل‌های برداری",
+     "style": {
+      "font_size": 10.5,
+      "color": "#4a5260"
+     }
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 18.0,
+    "space_after": 4.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Notes"
+   },
+   "runs": [
+    {
+     "text": "پی‌نوشت‌ها",
+     "style": {
+      "bold": true
+     }
+    }
+   ]
+  },
+  {
+   "type": "paragraph",
+   "style": {
+    "alignment": "start",
+    "direction": "auto",
+    "line_spacing": 1.0,
+    "space_before": 0.0,
+    "space_after": 0.0,
+    "first_line_indent": 0.0,
+    "indent_left": 0.0,
+    "indent_right": 0.0,
+    "background": null,
+    "page_break_before": false,
+    "style_name": "Notes"
+   },
+   "runs": [
+    {
+     "text": "۱. Albert Einstein، مقالهٔ سال ۱۹۰۵ در Annalen der Physik.",
+     "style": {
+      "font_size": 11.05
+     }
+    }
+   ]
+  }
+ ],
+ "resources": {
+  "3e3e1f093c610367.png": "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"
+ }
+}
