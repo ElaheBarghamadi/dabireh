@@ -17,10 +17,12 @@ from core.persian import format_number
 from core.templates import TEMPLATES, build_template
 from editor import export
 from editor.formatting import document_statistics
-from editor.objects import OBJECT_CHAR, object_from_format
+from editor.objects import OBJECT_CHAR, image_to_png_bytes, object_from_format
 from editor.page_render import PageRenderer
 from editor.qt_bridge import style_from_block
 from storage.document_repository import write_text_atomically
+from ui.dialogs.canvas_dialog import CanvasDialog
+from ui.dialogs.drawing_dialog import DrawingDialog
 from ui.dialogs.insert_dialogs import (
     IMAGE_FILTER,
     CaptionDialog,
@@ -59,7 +61,7 @@ class WindowFeatures:
 
     # ----------------------------------------------------------------- menus
     def _build_feature_menus(self, insert_menu: QMenu, table_menu: QMenu) -> None:
-        self._add(insert_menu, "insert_table", "insert_image", "insert_shape", "insert_equation", None,
+        self._add(insert_menu, "insert_table", "insert_image", "insert_shape", "insert_canvas", "drawing_studio", "insert_equation", None,
                   "insert_link", "remove_link", "insert_bookmark", "go_to_bookmark", "insert_crossref", None,
                   "insert_caption", "insert_note", None)
         lists = insert_menu.addMenu("فهرست‌های خودکار")
@@ -100,6 +102,8 @@ class WindowFeatures:
             "insert_table": self.insert_table,
             "insert_image": self.insert_image,
             "insert_shape": self.insert_shape,
+            "insert_canvas": self.insert_canvas,
+            "drawing_studio": self.open_drawing_studio,
             "insert_equation": self.insert_equation,
             "insert_link": self.insert_link,
             "insert_bookmark": self.insert_bookmark,
@@ -160,6 +164,21 @@ class WindowFeatures:
             return False
         self._message("برای تنظیم اندازه و جای تصویر، روی آن دوبار کلیک کنید یا «ویژگی‌های شیء» را بزنید.", 8000)
         return True
+
+    def open_drawing_studio(self) -> None:
+        dialog = DrawingDialog(self)
+        if dialog.exec() and dialog.inserted_image is not None:
+            self.editor.insert_image_data(image_to_png_bytes(dialog.inserted_image), "png")
+            self._message("نقاشی به صورت تصویر در سند درج شد.", 5000)
+
+    def insert_canvas(self) -> None:
+        geometry = self.editor.page_geometry
+        width = max(40.0, min(520.0, geometry.content_width - 12))
+        height = max(40.0, min(300.0, geometry.content_height - 24))
+        dialog = CanvasDialog(parent=self, width=width, height=height)
+        if dialog.exec():
+            self.editor.insert_layout_canvas(dialog.object())
+            self._message("برای ویرایش چیدمان، روی آن دوبار کلیک کنید.", 8000)
 
     def insert_shape(self) -> None:
         dialog = ShapeDialog(None, self)
@@ -261,7 +280,7 @@ class WindowFeatures:
                 self._replace_image(position, updated, Path(dialog.replacement))
                 return
         elif kind == "shape":
-            dialog = ShapeDialog(obj, self)
+            dialog = CanvasDialog(obj, self) if obj.get("layout_canvas") is True else ShapeDialog(obj, self)
             if not dialog.exec():
                 return
             updated = dialog.object()

@@ -225,11 +225,11 @@ class FeatureMixin:
                      QTextFormat.Property.TextVerticalAlignment):
             base.clearProperty(prop)
         cursor.removeSelectedText()
-        is_block_image = obj.get("type") == "image" and obj.get("wrap") == "block"
+        is_separate_object = ((obj.get("type") == "image" and obj.get("wrap") == "block") or
+                          (obj.get("type") == "shape" and obj.get("layout_canvas") is True))
         text_format = QTextBlockFormat(cursor.blockFormat())
-        if is_block_image:
-            # Give the picture its own paragraph, splitting any surrounding text
-            # without deleting it. This guarantees text stays above/below it.
+        if is_separate_object:
+            # Give the object its own paragraph, preserving surrounding text.
             block = cursor.block()
             before = cursor.position() > block.position()
             after = cursor.position() < block.position() + block.length() - 1
@@ -249,8 +249,8 @@ class FeatureMixin:
             fmt.setTextIndent(0)
             cursor.setBlockFormat(fmt)
         insert_object(cursor, obj, base)
-        if is_block_image:
-            # Continue typing in a separate paragraph rather than next to the image.
+        if is_separate_object:
+            # Continue typing in a separate paragraph rather than next to the object.
             next_block = cursor.block().next()
             next_cursor = QTextCursor(next_block) if next_block.isValid() else None
             if next_cursor is not None and next_cursor.currentFrame() == cursor.currentFrame():
@@ -259,6 +259,15 @@ class FeatureMixin:
                 cursor.insertBlock(text_format, without_object(base))
         cursor.endEditBlock()
         self.setTextCursor(cursor)
+
+    def insert_layout_canvas(self, obj: dict[str, Any]) -> None:
+        """Insert the canvas as a separate paragraph in a single undo step."""
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+        self.insert_object(obj)
+        position = self.textCursor().position() - 1
+        self.replace_object(position, obj)
+        cursor.endEditBlock()
 
     def prepare_image_data(self, data: bytes, suffix: str, max_width: float | None = None) -> dict[str, Any] | None:
         suffix = suffix.lower().lstrip(".")

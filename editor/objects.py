@@ -399,10 +399,22 @@ def paint_shape(painter: QPainter, rect: QRectF, obj: dict[str, Any]) -> None:
         painter.drawRect(inner)
     text = str(obj.get("text", "") or "")
     if text and kind not in ("line", "arrow", "connector"):
-        option = QTextOption(Qt.AlignmentFlag.AlignCenter)
+        alignment = {"left": Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute,
+                     "right": Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignAbsolute,
+                     "center": Qt.AlignmentFlag.AlignHCenter}.get(obj.get("text_alignment"), Qt.AlignmentFlag.AlignCenter)
+        option = QTextOption(alignment)
         option.setWrapMode(QTextOption.WrapMode.WordWrap)
+        if "font_size" in obj:
+            font = QFont(painter.font())
+            if isinstance(obj.get("font_family"), str) and obj["font_family"]:
+                font.setFamily(obj["font_family"])
+            font.setPixelSize(max(1, min(200, round(float(obj["font_size"])))))
+            painter.setFont(font)
         painter.setPen(QColor(str(obj.get("text_color", "#111827"))))
-        painter.drawText(text_rect.adjusted(4, 2, -4, -2), text, option)
+        text_rect = text_rect.adjusted(4, 2, -4, -2)
+        if obj.get("clip_text"):
+            painter.setClipRect(text_rect, Qt.ClipOperation.IntersectClip)
+        painter.drawText(text_rect, text, option)
     painter.restore()
 
 

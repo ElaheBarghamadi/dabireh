@@ -17,6 +17,8 @@ _SCALE = 3  # render at 3× so icons stay crisp on high-DPI displays
 _PATHS: dict[str, str] = {
     "table": '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.5h18M3 14.5h18M9 4v16M15 4v16"/>',
     "image": '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5-8 8"/>',
+    "draw": '<path d="M4 20l4-1 11-11-3-3L5 16zM14.5 6.5l3 3M4 20l1-4M3 22h18"/>',
+    "layout": '<rect x="3" y="4" width="18" height="16" rx="1.5"/><rect x="5.5" y="7" width="6" height="5" rx=".5"/><path d="M14 8h4M14 11h4M6 16h12"/>',
     "shape": '<rect x="3" y="10" width="11" height="11" rx="1"/><circle cx="15.5" cy="8.5" r="5.5"/>',
     "equation": '<path d="M18 5H7l5.5 7L7 19h11"/>',
     "link": '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',

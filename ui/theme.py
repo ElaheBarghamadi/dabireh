@@ -78,6 +78,9 @@ QToolButton:hover { background: $hover; }
 QToolButton:pressed { background: $pressed; }
 QToolButton:checked { background: $accent_soft; border-color: $checked_border; }
 QToolButton:disabled { background: transparent; }
+QToolButton#DrawingTool { background: $surface; border: 1px solid $border; padding: 6px 12px; }
+QToolButton#DrawingTool:hover { background: $hover; }
+QToolButton#DrawingTool:checked { background: $accent_soft; border-color: $checked_border; }
 QToolButton[popupMode="1"] { padding-left: 18px; }
 QToolButton::menu-button { border: none; width: 16px; border-radius: 6px; }
 QToolButton::menu-arrow { image: url($icons/chevron-down.svg); width: 10px; height: 10px; }

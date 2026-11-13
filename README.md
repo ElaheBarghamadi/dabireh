@@ -173,6 +173,37 @@ result *looks* right to a reader; for that, review the images from
 - Running two instances at once: the second one will offer the first one's unsaved autosave snapshot for recovery.
 - No print dialog yet; print via the exported PDF.
 
+## Drawing studio
+
+Open «درج ← کارگاه نقاشی» for a separate raster drawing workspace. It offers
+a pen, highlighter, eraser, line, arrow, rectangle, ellipse and text; choose
+colours, stroke width and opacity, fill shapes, import a picture, resize or
+zoom the canvas, and undo/redo. Save as PNG with a transparent or coloured
+background, or as JPEG with a coloured background. Alternatively, insert the
+finished drawing into the current document as an image.
+
+The drawing is raster-based: once drawn, its individual strokes and shapes
+cannot be moved independently, though undo/redo is available while the studio
+is open. PNG/JPEG output and inserted drawings are flattened images, not an
+editable drawing project. The separate «چیدمان آزاد» tool is available for
+individually movable text boxes and shapes.
+
+## Free layout for text and shapes
+
+Choose «درج ← چیدمان آزاد متن و شکل» to insert a layout canvas. Add text
+boxes, rectangles, ellipses or arrows, then drag them into place. Select an
+item to edit its text, colours and dimensions; drag its lower-right handle to
+resize it. Items can be duplicated, deleted and reordered. Double-click a text
+box to focus its text field. After confirming, double-click the canvas in the
+document to reopen the layout editor. The canvas is anchored as a separate
+paragraph; ordinary document text flows above and below it.
+
+This is a bounded canvas, not free positioning across the entire page. Canvas
+text is part of a shape group: it is not included in ordinary document text
+search/statistics, and DOCX export renders it as an image rather than editable
+Word text. Text that does not fit in its box is clipped; enlarge the box to
+show it. PDF and Dabireh documents preserve the layout.
+
 ## Working with images
 
 Insert an image from «درج ← تصویر» (or paste/drag one into the document).
