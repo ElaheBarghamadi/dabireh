@@ -1075,3 +1075,157 @@ def test_autosave_settings_apply(window: MainWindow) -> None:
     assert (settings.autosave_enabled, settings.autosave_interval_seconds, settings.version_limit,
             settings.backup_limit) == (False, 45, 7, 0)
     assert not window.autosave.is_enabled() and window.services.versions.limit == 7
+
+
+def test_image_block_placement_splits_text_and_round_trips(editor: RichTextEditor, png: Path, qapp: QApplication) -> None:
+    type_text(editor, "قبل بعد")
+    cursor = editor.textCursor()
+    cursor.setPosition(4)
+    editor.setTextCursor(cursor)
+    obj = editor.insert_image_file(png)
+    position = editor.textCursor().position() - 1
+    editor.replace_object(position, {**obj, "wrap": "block", "block_alignment": "center"})
+    document = editor.to_document()
+    assert [p.text for p in document.paragraphs] == ["قبل ", "", "بعد"]
+    assert document.paragraphs[1].runs[0].object["wrap"] == "block"
+    assert document.paragraphs[1].style.alignment == "center"
+    qapp.processEvents()
+    blocks = [editor.document().findBlockByNumber(i) for i in range(3)]
+    rects = [editor.document().documentLayout().blockBoundingRect(block) for block in blocks]
+    assert rects[0].bottom() <= rects[1].top() + 1
+    assert rects[1].bottom() <= rects[2].top() + 1
+    other = RichTextEditor()
+    other.load_document(Document.from_json(document.to_json()))
+    assert other.to_document() == document
+    other.deleteLater()
+    editor.undo()
+    assert editor.toPlainText() == "قبل \ufffcبعد"
+
+
+def test_floating_image_can_be_changed_to_block(editor: RichTextEditor, png: Path) -> None:
+    type_text(editor, "before after")
+    cursor = editor.textCursor()
+    cursor.setPosition(7)
+    editor.setTextCursor(cursor)
+    obj = editor.insert_image_file(png)
+    pos = editor.textCursor().position() - 1
+    editor.replace_object(pos, {**obj, "wrap": "square_left"})
+    editor.replace_object(pos, {**obj, "wrap": "block", "block_alignment": "left"})
+    doc = editor.to_document()
+    assert [p.text for p in doc.paragraphs] == ["before ", "", "after"]
+    assert doc.paragraphs[1].runs[0].object["wrap"] == "block"
+
+
+def test_image_dialog_fit_and_block_placement(qapp: QApplication) -> None:
+    from PySide6.QtCore import QSize
+    from editor.objects import rotated_bounds
+
+    dialog = ImageDialog({"type": "image", "resource": "x.png", "width": 600, "height": 1200,
+                          "rotation": 90}, page_size=QSize(400, 700))
+    dialog.wrap.setCurrentIndex(dialog.wrap.findData("block"))
+    assert dialog.alignment.isEnabled()
+    dialog.alignment.setCurrentIndex(dialog.alignment.findData("left"))
+    dialog._fit_page()
+    bounds = rotated_bounds(dialog.width.value(), dialog.height.value(), dialog.rotation.value())
+    assert bounds.width() <= 400.1 and bounds.height() <= 700.1
+    assert dialog.object()["block_alignment"] == "left"
+
+
+def test_edit_image_opens_properties_and_replace_failure_keeps_original(window: MainWindow, png: Path,
+                                                                         monkeypatch: pytest.MonkeyPatch,
+                                                                         tmp_path: Path) -> None:
+    from app import window_features
+
+    obj = window.editor.insert_image_file(png)
+    position = window.editor.textCursor().position() - 1
+    seen = []
+
+    class FakeDialog:
+        replacement = None
+
+        def __init__(self, image, natural, parent, **kwargs):
+            seen.append((image, natural, kwargs))
+
+        def exec(self):
+            return False
+
+    monkeypatch.setattr(window_features, "ImageDialog", FakeDialog)
+    window.edit_object(position, obj)
+    assert seen[0][1].width() == 200 and seen[0][1].height() == 100
+    errors = []
+    monkeypatch.setattr(window, "_show_error", lambda *args: errors.append(args))
+    before = window.editor.to_document()
+    window._replace_image(position, obj, tmp_path / "missing.png")
+    assert errors and window.editor.to_document() == before
+
+
+def test_inserted_tall_image_fits_page_height(editor: RichTextEditor) -> None:
+    from editor.objects import image_to_png_bytes
+
+    image = QImage(100, 3000, QImage.Format.Format_RGB32)
+    image.fill(QColor("blue"))
+    obj = editor.insert_image_data(image_to_png_bytes(image), "png")
+    assert obj is not None
+    assert obj["height"] <= editor.page_geometry.content_height - 23
+    assert obj["width"] / obj["height"] == pytest.approx(100 / 3000, abs=0.001)
+
+
+def test_image_crop_controls_prevent_empty_crop(qapp: QApplication) -> None:
+    dialog = ImageDialog({"type": "image", "resource": "x.png", "width": 200, "height": 100})
+    dialog.crop[0].setValue(90)
+    dialog.crop[2].setValue(90)
+    dialog.crop[1].setValue(80)
+    dialog.crop[3].setValue(80)
+    left, top, right, bottom = dialog.object()["crop"]
+    assert left + right < 1
+    assert top + bottom < 1
+
+
+def test_typing_after_block_image_starts_below_it(editor: RichTextEditor, png: Path) -> None:
+    obj = editor.insert_image_file(png)
+    pos = editor.textCursor().position() - 1
+    editor.replace_object(pos, {**obj, "wrap": "block", "block_alignment": "right"})
+    type_text(editor, "متن بعد")
+    document = editor.to_document()
+    assert len(document.paragraphs) == 2
+    assert document.paragraphs[0].runs[0].object["type"] == "image"
+    assert document.paragraphs[1].text == "متن بعد"
+    assert document.paragraphs[0].style.alignment in ("start", "end")
+
+
+def test_replacing_image_preserves_placement_and_supports_undo(window: MainWindow, png: Path, tmp_path: Path) -> None:
+    original = window.editor.insert_image_file(png)
+    position = window.editor.textCursor().position() - 1
+    new_file = tmp_path / "new.png"
+    image = QImage(80, 40, QImage.Format.Format_RGB32)
+    image.fill(QColor("red"))
+    assert image.save(str(new_file))
+    window._replace_image(position, {**original, "width": 150, "height": 75, "wrap": "block",
+                                     "block_alignment": "center"}, new_file)
+    picture = window.editor.to_document().paragraphs[0].runs[0].object
+    assert picture["resource"] != original["resource"]
+    assert (picture["width"], picture["height"], picture["wrap"]) == (150, 75, "block")
+    window.editor.undo()
+    restored = window.editor.to_document().paragraphs[0].runs[0].object
+    assert restored["resource"] == original["resource"]
+
+
+def test_block_image_keeps_text_outside_in_pdf(editor: RichTextEditor, png: Path, tmp_path: Path) -> None:
+    pymupdf = pytest.importorskip("pymupdf")
+    type_text(editor, "BEFORE AFTER")
+    cursor = editor.textCursor()
+    cursor.setPosition(7)
+    editor.setTextCursor(cursor)
+    obj = editor.insert_image_file(png)
+    editor.replace_object(editor.textCursor().position() - 1, {**obj, "wrap": "block", "block_alignment": "center"})
+    output = tmp_path / "image.pdf"
+    export.export_pdf(editor.document(), editor.page_settings, output, "")
+    with pymupdf.open(output) as pdf:
+        page = pdf[0]
+        images = page.get_images()
+        assert images
+        image_rect = page.get_image_rects(images[0])[0]
+        before = page.search_for("BEFORE")[0]
+        after = page.search_for("AFTER")[0]
+        assert before.y1 <= image_rect.y0 + 1
+        assert after.y0 >= image_rect.y1 - 1

@@ -125,7 +125,7 @@ ACTION_SPECS: tuple[ActionSpec, ...] = (
     ActionSpec("insert_lot", "فهرست جدول‌ها"),
     ActionSpec("page_break", "شکست صفحه", "page_break"),
     ActionSpec("header_footer", "سرصفحه و پاصفحه…", "header_footer"),
-    ActionSpec("object_properties", "ویژگی‌های شیء انتخاب‌شده…"),
+    ActionSpec("object_properties", "ویژگی‌های شیء انتخاب‌شده…", "info"),
     ActionSpec("group_shapes", "گروه‌کردن شکل‌های انتخاب‌شده"),
     ActionSpec("ungroup_shapes", "بازکردن گروه"),
     ActionSpec("shape_to_front", "آوردن به جلو (در گروه)"),
@@ -366,7 +366,7 @@ class EditorToolbars(QObject):
             "align_right", "align_center", "align_left", "align_justify", None, "dir_rtl", "dir_ltr", None,
             "bullet", "numbered", None, "indent_less", "indent_more", None,
             self.spacing_button, "paragraph", None, "zwnj", "script_fonts", "digits_persian", None,
-            "insert_table", "insert_image", "insert_shape", "insert_equation", "insert_link", "insert_note",
+            "insert_table", "insert_image", "object_properties", "insert_shape", "insert_equation", "insert_link", "insert_note",
             "page_break", "header_footer", "update_fields",
         )
 

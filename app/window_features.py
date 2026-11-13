@@ -8,8 +8,8 @@ import re
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import QSize
-from PySide6.QtGui import QColor, QImageReader, QTextCursor
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QColor, QTextCursor
 from PySide6.QtWidgets import QColorDialog, QDialog, QFileDialog, QInputDialog, QMenu
 
 from core.document import Document, DocumentFormatError
@@ -19,6 +19,7 @@ from editor import export
 from editor.formatting import document_statistics
 from editor.objects import OBJECT_CHAR, object_from_format
 from editor.page_render import PageRenderer
+from editor.qt_bridge import style_from_block
 from storage.document_repository import write_text_atomically
 from ui.dialogs.insert_dialogs import (
     IMAGE_FILTER,
@@ -157,6 +158,7 @@ class WindowFeatures:
         if obj is None:
             self._show_error("این پرونده یک تصویر پشتیبانی‌شده نیست.", str(path))
             return False
+        self._message("برای تنظیم اندازه و جای تصویر، روی آن دوبار کلیک کنید یا «ویژگی‌های شیء» را بزنید.", 8000)
         return True
 
     def insert_shape(self) -> None:
@@ -240,9 +242,18 @@ class WindowFeatures:
     def edit_object(self, position: int, obj: dict[str, Any]) -> None:
         kind = obj.get("type")
         if kind == "image":
-            natural = self.editor.objects.natural_size(obj)
+            obj = dict(obj)
+            if obj.get("wrap") == "block":
+                block = self.editor.document().findBlock(position)
+                alignment = style_from_block(block).alignment
+                rtl = block.textDirection() == Qt.LayoutDirection.RightToLeft
+                obj["block_alignment"] = ("center" if alignment == "center" else
+                                          "right" if (alignment == "start") == rtl else "left")
+            natural = self.editor.objects.natural_size(str(obj.get("resource", "")))
             size = QSize(int(natural.width()), int(natural.height())) if natural is not None else None
-            dialog = ImageDialog(obj, size, self)
+            geometry = self.editor.page_geometry
+            dialog = ImageDialog(obj, size, self, handler=self.editor.objects,
+                                 page_size=QSize(int(geometry.content_width - 12), int(geometry.content_height - 24)))
             if not dialog.exec():
                 return
             updated = dialog.object()
@@ -271,37 +282,17 @@ class WindowFeatures:
             self.editor.update_fields()
 
     def _replace_image(self, position: int, obj: dict[str, Any], path: Path) -> None:
-        reader = QImageReader(str(path))
-        if not reader.canRead():
+        try:
+            data = path.read_bytes()
+        except OSError as error:
+            self._show_error("تصویر خوانده نشد.", str(error))
+            return
+        fresh = self.editor.prepare_image_data(data, path.suffix)
+        if fresh is None:
             self._show_error("این پرونده یک تصویر پشتیبانی‌شده نیست.", str(path))
             return
-        cursor = self.editor.textCursor()
-        cursor.setPosition(position)
-        cursor.setPosition(position + 1, QTextCursor.MoveMode.KeepAnchor)
-        cursor.beginEditBlock()
-        cursor.removeSelectedText()
-        self.editor.setTextCursor(cursor)
-        fresh = self.editor.insert_image_file(path)
-        if fresh is not None:
-            found = self._object_before_cursor()
-            if found is not None:
-                keep = {key: obj[key] for key in ("rotation", "border_width", "border_color", "wrap") if key in obj}
-                # keep the chosen width, follow the new picture's aspect ratio
-                ratio = fresh["height"] / fresh["width"] if fresh.get("width") else 1.0
-                keep.update(width=obj["width"], height=round(obj["width"] * ratio, 1), crop=[0, 0, 0, 0])
-                self.editor.replace_object(found, {**fresh, **keep})
-        cursor.endEditBlock()
-
-    def _object_before_cursor(self) -> int | None:
-        document = self.editor.document()
-        position = self.editor.textCursor().position()
-        for candidate in range(position, max(-1, position - 4), -1):
-            if document.characterAt(candidate) == OBJECT_CHAR:
-                probe = QTextCursor(document)
-                probe.setPosition(candidate + 1)
-                if object_from_format(probe.charFormat()) is not None:
-                    return candidate
-        return None
+        # Validate and load the replacement before touching the existing image.
+        self.editor.replace_object(position, {**obj, "resource": fresh["resource"]})
 
     # ------------------------------------------------------ format and layout
     def show_character_spacing(self) -> None:

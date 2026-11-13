@@ -225,11 +225,42 @@ class FeatureMixin:
                      QTextFormat.Property.TextVerticalAlignment):
             base.clearProperty(prop)
         cursor.removeSelectedText()
+        is_block_image = obj.get("type") == "image" and obj.get("wrap") == "block"
+        text_format = QTextBlockFormat(cursor.blockFormat())
+        if is_block_image:
+            # Give the picture its own paragraph, splitting any surrounding text
+            # without deleting it. This guarantees text stays above/below it.
+            block = cursor.block()
+            before = cursor.position() > block.position()
+            after = cursor.position() < block.position() + block.length() - 1
+            if before:
+                cursor.insertBlock()
+            if after:
+                cursor.insertBlock()
+                cursor.movePosition(QTextCursor.MoveOperation.PreviousBlock)
+                cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock)
+            if cursor.currentList():
+                cursor.currentList().remove(cursor.block())
+            fmt = cursor.blockFormat()
+            align = obj.get("block_alignment", "center")
+            fmt.setAlignment({"left": Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignAbsolute,
+                              "right": Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignAbsolute,
+                              "center": Qt.AlignmentFlag.AlignHCenter}.get(align, Qt.AlignmentFlag.AlignHCenter))
+            fmt.setTextIndent(0)
+            cursor.setBlockFormat(fmt)
         insert_object(cursor, obj, base)
+        if is_block_image:
+            # Continue typing in a separate paragraph rather than next to the image.
+            next_block = cursor.block().next()
+            next_cursor = QTextCursor(next_block) if next_block.isValid() else None
+            if next_cursor is not None and next_cursor.currentFrame() == cursor.currentFrame():
+                cursor.setPosition(next_block.position())
+            else:
+                cursor.insertBlock(text_format, without_object(base))
         cursor.endEditBlock()
         self.setTextCursor(cursor)
 
-    def insert_image_data(self, data: bytes, suffix: str, max_width: float | None = None) -> dict[str, Any] | None:
+    def prepare_image_data(self, data: bytes, suffix: str, max_width: float | None = None) -> dict[str, Any] | None:
         suffix = suffix.lower().lstrip(".")
         if suffix not in IMAGE_SUFFIXES:
             return None
@@ -243,12 +274,18 @@ class FeatureMixin:
             return None
         natural = handler.natural_size(key)
         geometry = self.page_geometry
-        limit = max_width or (geometry.width - geometry.margin_left - geometry.margin_right - 12)
-        scale = min(1.0, limit / max(1.0, natural.width()))
+        limit = max(1.0, max_width if max_width is not None else geometry.content_width - 12)
+        height_limit = max(1.0, geometry.content_height - 24)
+        scale = min(1.0, limit / max(1.0, natural.width()), height_limit / max(1.0, natural.height()))
         obj = {"type": "image", "resource": key, "width": round(natural.width() * scale, 1),
                "height": round(natural.height() * scale, 1), "rotation": 0, "crop": [0, 0, 0, 0],
                "border_width": 0, "border_color": "#000000", "wrap": "inline"}
-        self.insert_object(obj)
+        return obj
+
+    def insert_image_data(self, data: bytes, suffix: str, max_width: float | None = None) -> dict[str, Any] | None:
+        obj = self.prepare_image_data(data, suffix, max_width)
+        if obj is not None:
+            self.insert_object(obj)
         return obj
 
     def insert_image_file(self, path: Path | str) -> dict[str, Any] | None:

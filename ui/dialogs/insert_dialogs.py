@@ -32,7 +32,7 @@ from PySide6.QtWidgets import (
 from core.document import Table
 from core.equation import EquationError, parse
 from editor.equation_render import layout_equation, paint_equation
-from editor.objects import SHAPE_KINDS, paint_shape
+from editor.objects import SHAPE_KINDS, paint_shape, rotated_bounds
 from ui.dialogs.common import ColorField, choice_combo, length_spin, persian_button_box
 
 SHAPE_LABELS = {
@@ -151,9 +151,12 @@ class TablePropertiesDialog(QDialog):
 class ImageDialog(QDialog):
     """Size (with locked aspect ratio), rotation, crop, border and wrapping of an image."""
 
-    def __init__(self, obj: dict[str, Any], natural: QSize | None = None, parent: QWidget | None = None) -> None:
+    def __init__(self, obj: dict[str, Any], natural: QSize | None = None, parent: QWidget | None = None,
+                 *, handler=None, page_size: QSize | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("ویژگی‌های تصویر")
+        self._handler = handler
+        self._page_size = page_size
         self._obj = dict(obj)
         self.replacement: str | None = None
         width, height = float(obj.get("width", 100)), float(obj.get("height", 100))
@@ -167,10 +170,19 @@ class ImageDialog(QDialog):
         self.rotation = _double(float(obj.get("rotation", 0)), -360, 360, "درجه", 90, 0)
         crop = list(obj.get("crop") or [0, 0, 0, 0]) + [0, 0, 0, 0]
         self.crop = [_double(float(crop[i]) * 100, 0, 90, "٪") for i in range(4)]
+        for index in range(4):
+            self.crop[index].valueChanged.connect(lambda _value, i=index: self._limit_crop(i))
+        self._limit_crop(0)
+        self._limit_crop(1)
         self.border_width = _double(float(obj.get("border_width", 0)), 0, 20, "px", 0.5)
         self.border_color = ColorField(str(obj.get("border_color", "#000000")), allow_none=False)
-        self.wrap = choice_combo([("inline", "هم‌ردیف با متن"), ("square_right", "شناور در راست (متن دور تصویر)"),
-                                  ("square_left", "شناور در چپ (متن دور تصویر)")], str(obj.get("wrap", "inline")))
+        self.wrap = choice_combo([("inline", "هم‌ردیف با متن"), ("block", "جدا از متن (بالا و پایین تصویر)"),
+                                  ("square_right", "کنار متن، سمت راست"),
+                                  ("square_left", "کنار متن، سمت چپ")], str(obj.get("wrap", "inline")))
+        self.alignment = choice_combo([("right", "راست"), ("center", "وسط"), ("left", "چپ")],
+                                      str(obj.get("block_alignment", "center")))
+        self.wrap.currentIndexChanged.connect(self._update_placement)
+        self._update_placement()
         size_box = QGroupBox("اندازه و چرخش")
         size_form = QFormLayout(size_box)
         size_form.addRow("پهنا:", self.width)
@@ -182,7 +194,12 @@ class ImageDialog(QDialog):
             reset.clicked.connect(lambda: self._set_size(natural.width(), natural.height()))
             size_form.addRow(reset)
         size_form.addRow("چرخش:", self.rotation)
-        crop_box = QGroupBox("برش (درصد از هر لبه)")
+        if page_size is not None:
+            fit = QPushButton("جا دادن در محدودهٔ صفحه")
+            fit.setAutoDefault(False)
+            fit.clicked.connect(self._fit_page)
+            size_form.addRow(fit)
+        crop_box = QGroupBox("برش (درصد از هر لبه؛ مجموع دو لبه کمتر از ۱۰۰٪)")
         crop_form = QFormLayout(crop_box)
         for label, spin in zip(("چپ:", "بالا:", "راست:", "پایین:"), self.crop, strict=True):
             crop_form.addRow(label, spin)
@@ -191,7 +208,8 @@ class ImageDialog(QDialog):
         look_form.addRow("ضخامت کادر:", self.border_width)
         look_form.addRow("رنگ کادر:", self.border_color)
         look_form.addRow("جای‌گیری در متن:", self.wrap)
-        hint = QLabel("برای «بالا و پایین متن» تصویر را در بندی جدا بگذارید و بند را تراز کنید.")
+        look_form.addRow("تراز تصویر جدا:", self.alignment)
+        hint = QLabel("در حالت جدا، متن در بندهای بالا و پایین تصویر قرار می‌گیرد. در حالت کنار متن، تصویر شناور است.")
         hint.setWordWrap(True)
         hint.setObjectName("DialogHint")
         look_form.addRow(hint)
@@ -205,13 +223,40 @@ class ImageDialog(QDialog):
         left.addWidget(size_box)
         left.addWidget(look_box)
         columns.addLayout(left)
-        columns.addWidget(crop_box)
+        right = QVBoxLayout()
+        if handler is not None:
+            preview_label = QLabel("پیش‌نمایش تصویر فعلی")
+            right.addWidget(preview_label)
+            self.preview = _ImagePreview(self, handler)
+            right.addWidget(self.preview)
+            for control in (self.width, self.height, self.rotation, self.border_width, *self.crop):
+                control.valueChanged.connect(self.preview.update)
+            self.border_color.button.clicked.connect(self.preview.update)
+        right.addWidget(crop_box)
+        right.addStretch(1)
+        columns.addLayout(right)
         layout.addLayout(columns)
         row = QHBoxLayout()
         row.addWidget(replace_button)
         row.addWidget(self.replace_label, 1)
         layout.addLayout(row)
         layout.addWidget(persian_button_box(self))
+
+    def _limit_crop(self, index: int) -> None:
+        opposite = (index + 2) % 4
+        # Leave a visible strip of the original image on each axis.
+        self.crop[opposite].setMaximum(min(90.0, 99.0 - self.crop[index].value()))
+
+    def _update_placement(self) -> None:
+        self.alignment.setEnabled(self.wrap.currentData() == "block")
+
+    def _fit_page(self) -> None:
+        if self._page_size is None:
+            return
+        bounds = rotated_bounds(self.width.value(), self.height.value(), self.rotation.value())
+        scale = min(1.0, max(1, self._page_size.width()) / max(1.0, bounds.width()),
+                    max(1, self._page_size.height()) / max(1.0, bounds.height()))
+        self._set_size(self.width.value() * scale, self.height.value() * scale)
 
     def _set_size(self, width: float, height: float) -> None:
         self._ratio = width / height if height else 1.0
@@ -242,7 +287,7 @@ class ImageDialog(QDialog):
         name, _ = QFileDialog.getOpenFileName(self, "جایگزینی تصویر", "", IMAGE_FILTER)
         if name:
             self.replacement = name
-            self.replace_label.setText(name)
+            self.replace_label.setText(f"پس از تأیید جایگزین می‌شود: {name}")
 
     def object(self) -> dict[str, Any]:
         result = dict(self._obj)
@@ -250,9 +295,34 @@ class ImageDialog(QDialog):
             "width": round(self.width.value(), 1), "height": round(self.height.value(), 1),
             "rotation": self.rotation.value(), "crop": [round(s.value() / 100, 4) for s in self.crop],
             "border_width": self.border_width.value(), "border_color": self.border_color.color() or "#000000",
-            "wrap": self.wrap.currentData(),
+            "wrap": self.wrap.currentData(), "block_alignment": self.alignment.currentData(),
         })
         return result
+
+
+class _ImagePreview(QWidget):
+    """Small live preview using the same painter as the document."""
+
+    def __init__(self, dialog: ImageDialog, handler) -> None:
+        super().__init__(dialog)
+        self.dialog = dialog
+        self.handler = handler
+        self.setMinimumSize(200, 140)
+        self.setMaximumHeight(180)
+
+    def paintEvent(self, event: QPaintEvent) -> None:  # noqa: N802
+        painter = QPainter(self)
+        painter.fillRect(self.rect(), QColor("#ffffff"))
+        obj = self.dialog.object()
+        bounds = rotated_bounds(obj["width"], obj["height"], obj["rotation"])
+        scale = min((self.width() - 16) / max(1.0, bounds.width()),
+                    (self.height() - 16) / max(1.0, bounds.height()))
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        painter.translate(self.width() / 2, self.height() / 2)
+        painter.scale(scale, scale)
+        self.handler.paint_image(painter, QRectF(-bounds.width() / 2, -bounds.height() / 2,
+                                                 bounds.width(), bounds.height()), obj)
+        painter.end()
 
 
 IMAGE_FILTER = "تصویر (*.png *.jpg *.jpeg *.webp *.svg *.bmp *.gif)"

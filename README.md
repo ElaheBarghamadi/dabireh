@@ -173,6 +173,17 @@ result *looks* right to a reader; for that, review the images from
 - Running two instances at once: the second one will offer the first one's unsaved autosave snapshot for recovery.
 - No print dialog yet; print via the exported PDF.
 
+## Working with images
+
+Insert an image from «درج ← تصویر» (or paste/drag one into the document).
+Double-click it or use «درج ← ویژگی‌های شیء انتخاب‌شده» to adjust its size,
+rotation, crop, border and placement. The dialog includes a preview and a
+button to fit the image within the page margins. Choose «جدا از متن» and
+right, centre or left alignment to place the image in its own paragraph, with
+text above and below it. The surrounding text is preserved; typing continues
+in a paragraph below. Inline and floating left/right modes remain available.
+Images are anchored to the text rather than freely draggable around the page.
+
 ## Appearance
 
 Choose a light, warm or dark application theme in «نمایش ← پوستهٔ برنامه».
