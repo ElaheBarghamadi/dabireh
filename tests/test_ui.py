@@ -25,7 +25,7 @@ def test_interface_is_persian_and_right_to_left(window: MainWindow, qapp: QAppli
     assert qapp.layoutDirection() == Qt.LayoutDirection.RightToLeft
     assert qapp.font().family() == "Vazirmatn"
     menus = [action.text() for action in window.menuBar().actions()]
-    assert menus == ["پرونده", "ویرایش", "درج", "جدول", "قالب", "بند", "ابزار فارسی", "راهنما"]
+    assert menus == ["پرونده", "ویرایش", "درج", "جدول", "قالب", "بند", "ابزار فارسی", "نمایش", "راهنما"]
 
 
 def test_every_command_is_connected_and_reachable(window: MainWindow) -> None:
@@ -215,3 +215,55 @@ def test_window_renders_at_several_sizes(window: MainWindow, qapp: QApplication,
         assert window.editor.viewport().width() > 200  # the page stays usable
         colours = {image.pixelColor(x, y).name() for x in range(0, width, 40) for y in range(0, height, 40)}
         assert len(colours) > 3  # not a blank frame
+
+
+def test_theme_switching_preserves_document_and_persists(window: MainWindow, qapp: QApplication) -> None:
+    from PySide6.QtGui import QPalette
+    from ui.theme import THEMES
+
+    type_text(window.editor, "سلام دبیره")
+    before = window.editor.to_document()
+    modified = window.editor.document().isModified()
+    for name in ("dark", "warm", "light"):
+        window.theme_actions[name].trigger()
+        qapp.processEvents()
+        colors = THEMES[name][1]
+        assert qapp.palette().color(QPalette.ColorRole.Window).name() == colors.chrome
+        assert window.editor.palette().color(QPalette.ColorRole.Window).name() == colors.workspace
+        assert window.editor.palette().color(QPalette.ColorRole.Text).name() == "#1f2430"
+        assert window.theme_actions[name].isChecked()
+        assert window.services.settings_store.load().theme == name
+        assert window.editor.to_document() == before
+        assert window.editor.document().isModified() == modified
+
+
+def test_saved_theme_is_applied_when_window_opens(qapp: QApplication, services) -> None:
+    from PySide6.QtGui import QPalette
+    from ui.theme import THEMES, apply_theme
+
+    services.settings.theme = "dark"
+    window = MainWindow(services)
+    try:
+        assert window.theme_actions["dark"].isChecked()
+        assert qapp.palette().color(QPalette.ColorRole.Window).name() == THEMES["dark"][1].chrome
+        assert window.editor.viewport().palette().color(QPalette.ColorRole.Base).name() == "#ffffff"
+    finally:
+        window.close()
+        window.deleteLater()
+        apply_theme(qapp)
+
+
+def test_view_menu_can_restore_hidden_toolbars(window: MainWindow, qapp: QApplication) -> None:
+    toolbar = window.toolbars.paragraph_toolbar
+    toolbar.toggleViewAction().trigger()
+    qapp.processEvents()
+    assert toolbar.isHidden()
+    toolbar.toggleViewAction().trigger()
+    qapp.processEvents()
+    assert toolbar.isVisible()
+
+
+def test_invalid_theme_setting_falls_back_to_light(services) -> None:
+    services.settings.theme = "unknown"
+    services.settings_store.save(services.settings)
+    assert services.settings_store.load().theme == "light"

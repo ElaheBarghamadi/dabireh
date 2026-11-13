@@ -201,3 +201,31 @@ def test_page_counting() -> None:
     assert page_count(1000, 1000) == 1
     assert page_count(1001, 1000) == 2
     assert page_of_offset(0, 1000) == 1 and page_of_offset(1000, 1000) == 2
+
+
+def test_malformed_document_structures_report_format_error() -> None:
+    document = Document().to_dict()
+    document["styles"] = 42
+    with pytest.raises(DocumentFormatError):
+        Document.from_dict(document)
+
+    document = Document().to_dict()
+    document["blocks"] = [{"type": "table", "rows": [[{"blocks": None}]]}]
+    with pytest.raises(DocumentFormatError):
+        Document.from_dict(document)
+
+    document = Document().to_dict()
+    document["version"] = True
+    with pytest.raises(DocumentFormatError):
+        Document.from_dict(document)
+
+
+def test_non_finite_document_numbers_use_safe_defaults() -> None:
+    document = Document().to_dict()
+    document["page"]["margin_top"] = float("nan")
+    document["defaults"]["font_size"] = float("inf")
+    document["blocks"] = [{"runs": [{"text": "x", "style": {"stretch": float("nan")}}]}]
+    loaded = Document.from_dict(document)
+    assert loaded.page.margin_top == 25.0
+    assert loaded.defaults.font_size == 13.0
+    assert loaded.paragraphs[0].runs[0].style.stretch is None

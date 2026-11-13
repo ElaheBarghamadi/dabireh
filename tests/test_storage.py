@@ -285,3 +285,82 @@ def test_clean_close_leaves_no_recovery_snapshot(qapp: QApplication, services: S
     assert services.autosave_store.snapshots() == []
     assert services.settings_store.load().window_width == 1000
     window.deleteLater()
+
+
+def test_autosave_retries_after_failed_write(qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    store = AutosaveStore(Database(tmp_path / "db.sqlite3"))
+    original = store.save
+    monkeypatch.setattr(store, "save", lambda _snapshot: (_ for _ in ()).throw(OSError("disk full")))
+    controller = AutosaveController(store, _snapshot, interval_seconds=1, idle_ms=0)
+    controller.note_edit()
+    assert controller.save_now(blocking=True) is False
+    monkeypatch.setattr(store, "save", original)
+    controller._on_timer()
+    controller.flush()
+    qapp.processEvents()
+    assert store.snapshots()[0].document().plain_text() == "متن ذخیره‌نشده"
+
+
+def test_blocking_autosave_waits_for_older_writes(qapp: QApplication, tmp_path: Path) -> None:
+    import threading
+
+    store = AutosaveStore(Database(tmp_path / "db.sqlite3"))
+    real_save = store.save
+    started = threading.Event()
+    release = threading.Event()
+
+    def slow_save(snapshot: Snapshot) -> str:
+        if snapshot.document().plain_text() == "old":
+            started.set()
+            assert release.wait(5)
+        return real_save(snapshot)
+
+    store.save = slow_save
+    current = [_snapshot(text="old")]
+    controller = AutosaveController(store, lambda: current[0])
+    assert controller.save_now()
+    assert started.wait(5)
+    current[0] = _snapshot(text="new")
+    timer = threading.Timer(0.1, release.set)
+    timer.start()
+    try:
+        assert controller.save_now(blocking=True)
+    finally:
+        release.set()
+        timer.join()
+        controller.flush()
+    assert store.snapshots()[0].document().plain_text() == "new"
+
+
+def test_late_autosave_failure_does_not_retry_discarded_document(qapp: QApplication, tmp_path: Path) -> None:
+    store = AutosaveStore(Database(tmp_path / "db.sqlite3"))
+    store.save = lambda _snapshot: (_ for _ in ()).throw(OSError("disk full"))
+    controller = AutosaveController(store, _snapshot)
+    controller.note_edit()
+    assert controller.save_now()
+    controller.discard("k1")
+    qapp.processEvents()
+    assert not controller._dirty
+
+
+def test_background_autosave_failure_is_retried(qapp: QApplication, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    store = AutosaveStore(Database(tmp_path / "db.sqlite3"))
+    original = store.save
+    monkeypatch.setattr(store, "save", lambda _snapshot: (_ for _ in ()).throw(OSError("disk full")))
+    controller = AutosaveController(store, _snapshot, idle_ms=0)
+    controller.note_edit()
+    assert controller.save_now()
+    controller.flush()
+    qapp.processEvents()
+    assert controller._dirty
+    monkeypatch.setattr(store, "save", original)
+    controller._on_timer()
+    controller.flush()
+    qapp.processEvents()
+    assert store.snapshots()[0].doc_key == "k1"
+
+
+def test_changing_autosave_interval_updates_maximum_delay(qapp: QApplication, tmp_path: Path) -> None:
+    controller = AutosaveController(AutosaveStore(Database(tmp_path / "db.sqlite3")), _snapshot)
+    controller.set_interval(120)
+    assert controller._max_delay_seconds == 240

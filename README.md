@@ -173,6 +173,13 @@ result *looks* right to a reader; for that, review the images from
 - Running two instances at once: the second one will offer the first one's unsaved autosave snapshot for recovery.
 - No print dialog yet; print via the exported PDF.
 
+## Appearance
+
+Choose a light, warm or dark application theme in «نمایش ← پوستهٔ برنامه».
+The choice is saved immediately. Themes change the interface and workspace,
+not the document's page colour or its exported content. The «نمایش» menu also
+lets you hide or restore each toolbar.
+
 ## Keyboard shortcuts
 
 Press `F1` in the app for the full list. Main ones: `Ctrl+N/O/S`, `Ctrl+Shift+S`,
@@ -248,6 +255,8 @@ Samples: `docs/samples/feature_sample.{dbr,pdf,docx}`; screenshots in
   content created by the editor is reduced to plain text.
 - Version history lives in the application database, not in the `.dbr` file,
   so it does not travel with the file.
+- Older backups remain visible after upgrading but are not automatically pruned,
+  because their names do not identify the original folder.
 - Phase 1 leftover: in a window narrower than the page, the horizontal scroll
   position starts at the left edge of the page.
 

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
+import os
+import re
 import shutil
 from dataclasses import dataclass
 from datetime import datetime
@@ -140,20 +143,28 @@ class BackupManager:
     def backup(self, path: Path | str) -> Path | None:
         """Back up ``path`` if it exists; returns the backup file."""
         source = Path(path)
-        if not source.is_file():
+        if self.keep <= 0 or not source.is_file():
             return None
         self.directory.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
-        target = self.directory / f"{source.stem}.{stamp}{source.suffix}.bak"
+        target = self.directory / f"{source.name}.{self._source_id(source)}.{stamp}.bak"
         shutil.copy2(source, target)
         self._prune(source)
         return target
 
+    @staticmethod
+    def _source_id(source: Path) -> str:
+        # Separate files with the same name in different directories.
+        path = os.path.normcase(str(source.resolve()))
+        return hashlib.sha256(os.fsencode(path)).hexdigest()[:16]
+
     def _matching(self, source: Path) -> list[Path]:
-        return sorted(self.directory.glob(f"{glob_escape(source.stem)}.*{source.suffix}.bak"))
+        prefix = f"{glob_escape(source.name)}.{self._source_id(source)}."
+        return sorted(self.directory.glob(f"{prefix}*.bak"))
 
     def _prune(self, source: Path) -> None:
-        for old in self._matching(source)[:-self.keep]:
+        matches = self._matching(source)
+        for old in (matches[:-self.keep] if self.keep > 0 else matches):
             old.unlink(missing_ok=True)
 
     def backups(self) -> list[Backup]:
@@ -161,8 +172,15 @@ class BackupManager:
             return []
         result: list[Backup] = []
         for file in sorted(self.directory.glob("*.bak"), reverse=True):
-            parts = file.name[:-4].rsplit(".", 2)  # stem, stamp, suffix
-            original = f"{parts[0]}.{parts[2]}" if len(parts) == 3 else file.name
+            name = file.name[:-4]  # strip .bak
+            new_parts = name.rsplit(".", 2)  # original name, source id, timestamp
+            if (len(new_parts) == 3 and re.fullmatch(r"[0-9a-f]{16}", new_parts[1])
+                    and re.fullmatch(r"\d{8}-\d{6}-\d{6}", new_parts[2])):
+                original = new_parts[0]
+            else:
+                # Keep older backups available after upgrading.
+                parts = name.rsplit(".", 2)  # stem, timestamp, suffix
+                original = f"{parts[0]}.{parts[2]}" if len(parts) == 3 else file.name
             stat = file.stat()
             created = datetime.fromtimestamp(stat.st_mtime).astimezone().isoformat(timespec="seconds")
             result.append(Backup(file, original, created, stat.st_size))

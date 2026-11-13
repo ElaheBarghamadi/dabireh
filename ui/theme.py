@@ -1,4 +1,4 @@
-"""Light theme: one palette of design tokens and the application stylesheet."""
+"""Application themes, palettes and shared stylesheet."""
 
 from __future__ import annotations
 
@@ -21,18 +21,40 @@ class Colors:
     accent_soft: str = "#dce8fb"
     accent_softer: str = "#eef4fd"
     surface: str = "#ffffff"
-    chrome: str = "#f6f7f9"
-    workspace: str = "#e6e9ee"
-    border: str = "#d9dde3"
-    border_strong: str = "#c3c9d2"
+    chrome: str = "#f3f6fb"
+    workspace: str = "#e5eaf2"
+    border: str = "#d4dce8"
+    border_strong: str = "#b9c5d4"
     text: str = "#1f2430"
-    text_muted: str = "#667085"
-    hover: str = "#eceff3"
+    text_muted: str = "#526176"
+    hover: str = "#eaf0f8"
     pressed: str = "#dfe4ea"
     page_border: str = "#cfd4dc"
+    disabled: str = "#8993a2"
+    scrollbar: str = "#a7b1c0"
+    scrollbar_hover: str = "#798799"
+    checked_border: str = "#a7c2ed"
 
 
 COLORS = Colors()
+THEMES = {
+    "light": ("روشن", COLORS),
+    "warm": ("کاغذی", Colors(
+        accent="#825b32", accent_hover="#674522", accent_soft="#f1e3cd", accent_softer="#faf3e8",
+        surface="#fffdf8", chrome="#f6f0e5", workspace="#e9dfcf", border="#e1d6c6",
+        border_strong="#c8baa6", text="#30291f", text_muted="#6d6052", hover="#f4ebdd",
+        pressed="#eadcc8", page_border="#cbbda9", checked_border="#c8ad88")),
+    "dark": ("تیره", Colors(
+        accent="#3e76c4", accent_hover="#3266ad", accent_soft="#344c6c", accent_softer="#293b51",
+        surface="#252e3a", chrome="#1d2530", workspace="#141b24", border="#3d4959",
+        border_strong="#617084", text="#f1f5f9", text_muted="#bec9d7", hover="#354252",
+        pressed="#42546a", page_border="#77879a", disabled="#92a0b0", scrollbar="#67788c",
+        scrollbar_hover="#91a1b3", checked_border="#688cbc")),
+}
+
+
+def theme_colors(name: str) -> Colors:
+    return THEMES.get(name, THEMES["light"])[1]
 
 _STYLESHEET = Template(
     """
@@ -45,7 +67,7 @@ QMenuBar::item:selected, QMenuBar::item:pressed { background: $hover; }
 QMenu { background: $surface; border: 1px solid $border_strong; border-radius: 8px; padding: 6px; }
 QMenu::item { padding: 7px 28px 7px 28px; border-radius: 5px; margin: 1px 0; }
 QMenu::item:selected { background: $accent_soft; color: $text; }
-QMenu::item:disabled { color: #a6adb8; }
+QMenu::item:disabled { color: $disabled; }
 QMenu::separator { height: 1px; background: $border; margin: 5px 8px; }
 QMenu::icon { padding-right: 8px; padding-left: 8px; }
 
@@ -54,7 +76,7 @@ QToolBar::separator { width: 1px; background: $border; margin: 5px 6px; }
 QToolButton { border: 1px solid transparent; border-radius: 6px; padding: 5px; min-width: 22px; min-height: 22px; background: transparent; }
 QToolButton:hover { background: $hover; }
 QToolButton:pressed { background: $pressed; }
-QToolButton:checked { background: $accent_soft; border-color: #b7cdf3; }
+QToolButton:checked { background: $accent_soft; border-color: $checked_border; }
 QToolButton:disabled { background: transparent; }
 QToolButton[popupMode="1"] { padding-left: 18px; }
 QToolButton::menu-button { border: none; width: 16px; border-radius: 6px; }
@@ -65,7 +87,7 @@ QComboBox, QLineEdit, QSpinBox, QDoubleSpinBox {
     background: $surface; border: 1px solid $border_strong; border-radius: 6px;
     padding: 4px 8px; min-height: 22px; selection-background-color: $accent; selection-color: #ffffff;
 }
-QComboBox:hover, QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover { border-color: #9aa5b5; }
+QComboBox:hover, QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover { border-color: $accent; }
 QComboBox:focus, QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus { border-color: $accent; }
 QComboBox::drop-down { border: none; width: 22px; }
 QComboBox::down-arrow { image: url($icons/chevron-down.svg); width: 11px; height: 11px; }
@@ -87,7 +109,7 @@ QPushButton:hover { background: $hover; }
 QPushButton:pressed { background: $pressed; }
 QPushButton:default { background: $accent; border-color: $accent; color: #ffffff; }
 QPushButton:default:hover { background: $accent_hover; }
-QPushButton:disabled { color: #a6adb8; background: $chrome; }
+QPushButton:disabled { color: $disabled; background: $chrome; }
 
 QCheckBox { spacing: 6px; }
 QCheckBox::indicator { width: 16px; height: 16px; border: 1px solid $border_strong; border-radius: 4px; background: $surface; }
@@ -112,11 +134,11 @@ QStatusBar QLabel { color: $text_muted; padding: 3px 10px; }
 #DialogHint { color: $text_muted; }
 
 QScrollBar:vertical { background: transparent; width: 12px; margin: 0; }
-QScrollBar::handle:vertical { background: #b9c0cb; border-radius: 4px; min-height: 36px; margin: 2px; }
-QScrollBar::handle:vertical:hover { background: #99a2b0; }
+QScrollBar::handle:vertical { background: $scrollbar; border-radius: 4px; min-height: 36px; margin: 2px; }
+QScrollBar::handle:vertical:hover { background: $scrollbar_hover; }
 QScrollBar:horizontal { background: transparent; height: 12px; margin: 0; }
-QScrollBar::handle:horizontal { background: #b9c0cb; border-radius: 4px; min-width: 36px; margin: 2px; }
-QScrollBar::handle:horizontal:hover { background: #99a2b0; }
+QScrollBar::handle:horizontal { background: $scrollbar; border-radius: 4px; min-width: 36px; margin: 2px; }
+QScrollBar::handle:horizontal:hover { background: $scrollbar_hover; }
 QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
 QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
 """
@@ -125,7 +147,7 @@ QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
 
 def build_stylesheet(colors: Colors = COLORS) -> str:
     tokens = dict(vars(colors))
-    tokens["icons"] = (resource_dir() / "icons").as_posix()
+    tokens["icons"] = (resource_dir() / ("icons_dark" if colors == THEMES["dark"][1] else "icons")).as_posix()
     return _STYLESHEET.substitute(tokens)
 
 
@@ -147,11 +169,11 @@ def build_palette(colors: Colors = COLORS) -> QPalette:
     }
     for role, value in roles.items():
         palette.setColor(role, QColor(value))
-    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, QColor("#a6adb8"))
-    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, QColor("#a6adb8"))
-    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.WindowText, QColor("#a6adb8"))
+    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, QColor(colors.disabled))
+    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, QColor(colors.disabled))
+    palette.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.WindowText, QColor(colors.disabled))
     # Keep the text selection visible while a dialog or toolbar has the focus.
-    palette.setColor(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Highlight, QColor("#b9d0f5"))
+    palette.setColor(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Highlight, QColor(colors.accent_soft))
     palette.setColor(QPalette.ColorGroup.Inactive, QPalette.ColorRole.HighlightedText, QColor(colors.text))
     return palette
 
@@ -163,10 +185,11 @@ def ui_font() -> QFont:
     return font
 
 
-def apply_theme(app: QApplication) -> None:
+def apply_theme(app: QApplication, name: str = "light") -> None:
     fusion = QStyleFactory.create("Fusion")
     if fusion is not None:
         app.setStyle(fusion)
-    app.setPalette(build_palette())
+    colors = theme_colors(name)
+    app.setPalette(build_palette(colors))
     app.setFont(ui_font())
-    app.setStyleSheet(build_stylesheet())
+    app.setStyleSheet(build_stylesheet(colors))

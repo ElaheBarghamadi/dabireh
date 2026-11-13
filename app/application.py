@@ -71,15 +71,16 @@ def _install_exception_hook(window) -> None:  # noqa: ANN001
             sys.__excepthook__(exc_type, value, trace)
             return
         logger.error("Unhandled exception:\n%s", "".join(traceback.format_exception(exc_type, value, trace)))
+        recovered = False
         try:
-            window.autosave.save_now(blocking=True)
+            recovered = window.autosave.save_now(blocking=True)
         except Exception:
             logger.exception("Emergency autosave failed")
         box = QMessageBox(QMessageBox.Icon.Critical, APP_DISPLAY_NAME, "خطای پیش‌بینی‌نشده‌ای رخ داد.")
-        box.setInformativeText(
-            "یک نسخهٔ بازیابی از سند نگه‌داری شد. می‌توانید به کار ادامه دهید؛ "
-            "بهتر است سند را ذخیره و برنامه را دوباره اجرا کنید."
-        )
+        if recovered:
+            box.setInformativeText("یک نسخهٔ بازیابی از سند نگه‌داری شد. بهتر است سند را ذخیره و برنامه را دوباره اجرا کنید.")
+        else:
+            box.setInformativeText("نسخهٔ بازیابی جدیدی ساخته نشد. در صورت امکان سند را ذخیره و برنامه را دوباره اجرا کنید.")
         box.setDetailedText(f"{exc_type.__name__}: {value}")
         box.addButton("باشه", QMessageBox.ButtonRole.AcceptRole)
         box.exec()

@@ -9,8 +9,9 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QCloseEvent, QColor
+from PySide6.QtGui import QActionGroup, QCloseEvent, QColor
 from PySide6.QtWidgets import (
+    QApplication,
     QFileDialog,
     QLabel,
     QMainWindow,
@@ -29,7 +30,7 @@ from core.persian import format_number, to_persian_digits
 from editor.export import export_html, export_pdf
 from editor.formatting import document_statistics
 from editor.text_editor import RichTextEditor
-from editor.toolbar import LINE_SPACINGS, EditorActions, EditorToolbars, connect_editor_actions
+from editor.toolbar import ACTION_SPECS, LINE_SPACINGS, EditorActions, EditorToolbars, connect_editor_actions
 from storage.autosave import Snapshot
 from storage.document_repository import DocumentRepository
 from ui.components.find_bar import FindBar
@@ -38,7 +39,8 @@ from ui.dialogs.page_setup_dialog import PageSetupDialog
 from ui.dialogs.paragraph_dialog import ParagraphDialog
 from ui.dialogs.recovery_dialog import RecoveryDialog
 from ui.dialogs.shortcuts_dialog import ShortcutsDialog
-from ui.theme import COLORS
+from ui.icons import icon
+from ui.theme import THEMES, apply_theme, theme_colors
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +59,9 @@ class MainWindow(WindowFeatures, QMainWindow):
         settings = services.settings
 
         self.editor = RichTextEditor()
-        self.editor.set_workspace_colors(QColor(COLORS.workspace), QColor(COLORS.page_border))
+        colors = theme_colors(settings.theme)
+        apply_theme(QApplication.instance(), settings.theme)
+        self.editor.set_workspace_colors(QColor(colors.workspace), QColor(colors.page_border))
         self.find_bar = FindBar(self.editor)
         central = QWidget()
         layout = QVBoxLayout(central)
@@ -145,8 +149,42 @@ class MainWindow(WindowFeatures, QMainWindow):
         self._add(tools_menu, "zwnj", "insert_lrm", "insert_rlm", "isolate_ltr", None,
                   "digits_persian", "digits_latin", None, "visual_cursor", "autosave_enabled")
 
+        view_menu = bar.addMenu("نمایش")
+        theme_menu = view_menu.addMenu("پوستهٔ برنامه")
+        self.theme_group = QActionGroup(self)
+        self.theme_actions = {}
+        for name, (label, _colors) in THEMES.items():
+            action = theme_menu.addAction(label)
+            action.setCheckable(True)
+            action.setChecked(name == self.services.settings.theme)
+            self.theme_group.addAction(action)
+            action.triggered.connect(lambda _checked=False, n=name: self._set_theme(n))
+            self.theme_actions[name] = action
+        view_menu.addSeparator()
+        view_menu.addAction(self.toolbars.main_toolbar.toggleViewAction())
+        view_menu.addAction(self.toolbars.paragraph_toolbar.toggleViewAction())
+
         help_menu = bar.addMenu("راهنما")
         self._add(help_menu, "shortcuts", "customize_shortcuts", "about")
+
+    def _set_theme(self, name: str) -> None:
+        if name not in THEMES:
+            return
+        self.services.settings.theme = name
+        apply_theme(QApplication.instance(), name)
+        colors = theme_colors(name)
+        self.editor.set_workspace_colors(QColor(colors.workspace), QColor(colors.page_border))
+        for spec in ACTION_SPECS:
+            if spec.icon:
+                self.commands[spec.id].setIcon(icon(spec.icon))
+        self.toolbars.spacing_button.setIcon(icon("line_spacing"))
+        self.toolbars.color_button._refresh_icon()
+        self.toolbars.highlight_button._refresh_icon()
+        for button, icon_name in ((self.find_bar.previous_button, "up"),
+                                  (self.find_bar.next_button, "down"),
+                                  (self.find_bar.close_button, "close")):
+            button.setIcon(icon(icon_name))
+        self.services.settings_store.save(self.services.settings)
 
     def _add(self, menu: QMenu, *ids: str | None) -> None:
         for action_id in ids:

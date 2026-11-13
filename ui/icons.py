@@ -7,6 +7,8 @@ from functools import lru_cache
 from PySide6.QtCore import QByteArray, QRectF, Qt
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QPalette
 
 DEFAULT_COLOR = "#3b4350"
 DISABLED_COLOR = "#b4bac4"
@@ -99,16 +101,25 @@ def _build(name: str, color: str, size: int, extra: str = "") -> QIcon:
 
 
 @lru_cache(maxsize=256)
-def icon(name: str, color: str = DEFAULT_COLOR, size: int = 20) -> QIcon:
-    """Return the named icon tinted with ``color``."""
+def _cached_icon(name: str, color: str, size: int) -> QIcon:
     return _build(name, color, size)
+
+
+def icon_color() -> str:
+    app = QApplication.instance()
+    return app.palette().color(QPalette.ColorRole.WindowText).name() if app else DEFAULT_COLOR
+
+
+def icon(name: str, color: str | None = None, size: int = 20) -> QIcon:
+    """Return an icon in the current theme's foreground colour."""
+    return _cached_icon(name, color or icon_color(), size)
 
 
 def color_bar_icon(name: str, bar_color: str | None, size: int = 20) -> QIcon:
     """Icon with a colour bar underneath (text colour / highlight buttons)."""
     fill = bar_color or "#ffffff"
     bar = f'<rect x="3" y="18.5" width="18" height="4" rx="1" fill="{fill}" stroke="#9aa2ae" stroke-width="0.6"/>'
-    return _build(name, DEFAULT_COLOR, size, bar)
+    return _build(name, icon_color(), size, bar)
 
 
 def app_icon() -> QIcon:

@@ -96,9 +96,14 @@ class PageTextEdit(QTextEdit):
     def _apply_palette(self) -> None:
         palette = self.palette()
         palette.setColor(QPalette.ColorRole.Window, self._workspace_color)
+        # The UI theme must not change the appearance of the document page.
+        palette.setColor(QPalette.ColorRole.Text, QColor("#1f2430"))
+        palette.setColor(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Highlight, QColor("#b9d0f5"))
+        palette.setColor(QPalette.ColorGroup.Inactive, QPalette.ColorRole.HighlightedText, QColor("#1f2430"))
         self.setPalette(palette)
         viewport_palette = self.viewport().palette()
         viewport_palette.setColor(QPalette.ColorRole.Base, QColor(self._page.background))
+        viewport_palette.setColor(QPalette.ColorRole.Text, QColor("#1f2430"))
         self.viewport().setPalette(viewport_palette)
 
     def _enforce_page_size(self) -> None:

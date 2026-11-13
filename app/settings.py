@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import sys
 from dataclasses import asdict, dataclass, field, fields
@@ -40,6 +41,7 @@ class AppSettings:
     autosave_enabled: bool = True
     autosave_interval_seconds: int = 30
     visual_cursor_movement: bool = False
+    theme: str = "light"
     default_font_family: str = "Vazirmatn"
     default_font_size: float = 13.0
     default_latin_font: str = "Cambria"
@@ -64,6 +66,8 @@ class AppSettings:
         self.window_height = min(max(self.window_height, 480), 10000)
         self.default_font_size = min(max(self.default_font_size, 6.0), 96.0)
         self.default_margin_mm = min(max(self.default_margin_mm, 5.0), 100.0)
+        if self.theme not in ("light", "warm", "dark"):
+            self.theme = "light"
         if self.default_direction not in ("rtl", "ltr", "auto"):
             self.default_direction = "rtl"
         self.version_limit = min(max(self.version_limit, 1), 200)
@@ -99,7 +103,13 @@ class SettingsStore:
                 valid = isinstance(value, bool)
             elif isinstance(default, (int, float)):
                 valid = isinstance(value, (int, float)) and not isinstance(value, bool)
-                value = type(default)(value) if valid else value
+                if valid:
+                    try:
+                        valid = math.isfinite(value)
+                        if valid:
+                            value = type(default)(value)
+                    except (OverflowError, ValueError):
+                        valid = False
             elif isinstance(default, dict):
                 valid = isinstance(value, dict)
             else:

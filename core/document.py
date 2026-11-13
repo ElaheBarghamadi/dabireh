@@ -9,6 +9,7 @@ contract for future features (pagination engine, DOCX/PDF exporters).
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Iterator
 from dataclasses import asdict, dataclass, field, fields, replace
 from datetime import datetime, timezone
@@ -42,13 +43,15 @@ def _choice(value: Any, allowed: tuple[str, ...], default: str) -> str:
 
 
 def _number(value: Any, default: float, minimum: float = 0.0, maximum: float = 10_000.0) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+    if (isinstance(value, bool) or not isinstance(value, (int, float))
+            or (isinstance(value, float) and not math.isfinite(value))):
         return default
     return float(min(max(value, minimum), maximum))
 
 
 def _optional_number(value: Any, minimum: float, maximum: float) -> float | None:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+    if (isinstance(value, bool) or not isinstance(value, (int, float))
+            or (isinstance(value, float) and not math.isfinite(value))):
         return None
     return float(min(max(value, minimum), maximum))
 
@@ -257,6 +260,8 @@ class TableCell:
         if not isinstance(data, dict):
             raise DocumentFormatError("ساختار جدول سند معتبر نیست.")
         blocks = data.get("blocks", [])
+        if not isinstance(blocks, list):
+            raise DocumentFormatError("ساختار جدول سند معتبر نیست.")
         return cls(
             blocks=[Paragraph.from_dict(item) for item in blocks if isinstance(item, dict)] or [Paragraph()],
             row_span=int(_number(data.get("row_span"), 1, 1, 1000)),
@@ -563,7 +568,7 @@ class Document:
         if not isinstance(data, dict) or data.get("format") != FORMAT_NAME:
             raise DocumentFormatError("این پرونده یک سند دبیره نیست.")
         version = data.get("version")
-        if not isinstance(version, int) or version < 1:
+        if isinstance(version, bool) or not isinstance(version, int) or version < 1:
             raise DocumentFormatError("نسخهٔ قالب سند نامعتبر است.")
         if version > FORMAT_VERSION:
             raise DocumentFormatError(
@@ -573,7 +578,12 @@ class Document:
         blocks = data.get("blocks", data.get("paragraphs", []))
         if not isinstance(blocks, list):
             raise DocumentFormatError("ساختار بندهای سند معتبر نیست.")
-        styles = [NamedStyle.from_dict(item) for item in data.get("styles", []) or []]
+        style_data = data.get("styles", [])
+        if style_data is None:
+            style_data = []
+        if not isinstance(style_data, list):
+            raise DocumentFormatError("ساختار سبک‌های سند معتبر نیست.")
+        styles = [NamedStyle.from_dict(item) for item in style_data]
         resources = data.get("resources")
         return cls(
             metadata=Metadata.from_dict(data.get("metadata")),
